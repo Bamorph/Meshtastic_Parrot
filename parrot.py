@@ -138,8 +138,8 @@ def process_message(mp, text_payload, is_encrypted):
 
         if create_node_id(getattr(mp, "to")) == node_id:
             print("AUTO-REPLY DETAILS")
-            print(f'TO: {mp_from}')
-            print(f'FROM: {mp_to}')
+            print(f'TO: {create_node_id(mp_from)}')
+            print(f'FROM: {create_node_id(mp_to)}')
             print(f'MESSAGE TEXT: {text_payload}')
             print(mp)
 
