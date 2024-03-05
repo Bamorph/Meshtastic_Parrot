@@ -43,7 +43,7 @@ def decode_node_id(node_id):
     return int(hex_string, 16)
 
 
-node_id = "!abcde1e2"
+node_id = "!abcde1e2" # Choose a random Node_id to assign to your Parrot
 node_number = decode_node_id(node_id)
 
 
