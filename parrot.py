@@ -7,7 +7,6 @@ from cryptography.hazmat.backends import default_backend
 import base64
 import random
 import time
-from plyer import notification
 
 # Default settings
 MQTT_BROKER = "mqtt.meshtastic.org"
