@@ -23,12 +23,6 @@ long_name_entry = "MQTT-PARROT"
 short_name_entry = "\U0001F99C" # 🦜 emoji
 client_hw_model = "PRIVATE_HW"
 
-
-
-
-	# U+1F99C
-# \U0001F99C
-
 REPLY_DELAY = 1 # seconds
 
 padded_key = key.ljust(len(key) + ((4 - (len(key) % 4)) % 4), '=')
