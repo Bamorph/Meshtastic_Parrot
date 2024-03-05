@@ -23,6 +23,9 @@ long_name_entry = "MQTT-PARROT"
 short_name_entry = "\U0001F99C" # 🦜 emoji
 client_hw_model = "PRIVATE_HW"
 
+
+
+
 	# U+1F99C
 # \U0001F99C
 
@@ -34,7 +37,6 @@ key = replaced_key
 
 broadcast_id = 4294967295
 
-
 def create_node_id(node_number):
     return f"!{hex(node_number)[2:]}"
 
@@ -42,12 +44,11 @@ def decode_node_id(node_id):
     hex_string = node_id[1:]  # Removing the '!' character
     return int(hex_string, 16)
 
-
-node_id = "!abcde1e2" # Choose a random Node_id to assign to your Parrot
+node_id = "!abcde1e2"
 node_number = decode_node_id(node_id)
 
 
-# node_id = create_node_id(node_number)
+node_id = create_node_id(node_number)
 node_name = node_id
 
 print(f'AUTO-ROUTER NODE-ID: {node_id}')
@@ -131,23 +132,44 @@ def encrypt_message(channel, key, mesh_packet, encoded_message):
 
 known_id_list = []
 
+parrot_emoji = "\U0001F99C"
+
 def process_message(mp, text_payload, is_encrypted):
     mp_id = getattr(mp, "id")
     mp_to = getattr(mp, "to")
     mp_from = getattr(mp, "from")
+
+    parrot_flag = False
+    broadcast_flag = False
+    direct_flag = False
+    from_parrot = False
+
+    if mp_from == node_number:
+        print("Parrot message detected")
+        from_parrot = True
+
     if mp_id not in known_id_list:
         known_id_list.append(mp_id)
         print(mp)
 
-        if create_node_id(getattr(mp, "to")) == node_id:
-            print("AUTO-REPLY DETAILS")
-            print(f'TO: {create_node_id(mp_from)}')
-            print(f'FROM: {create_node_id(mp_to)}')
-            print(f'MESSAGE TEXT: {text_payload}')
-            print(mp)
+        if text_payload.startswith("\U0001F99C"):
+            print("Parrot emoji detected! \U0001F99C")
+            parrot_flag = True
+        if mp_to == broadcast_id:
+            print("broadcast message detected")
+            broadcast_flag = True
 
+        if create_node_id(getattr(mp, "to")) == node_id:
+            direct_flag = True
+
+        if direct_flag:
             time.sleep(REPLY_DELAY)
             publish_message(mp_from, f'PARROT:{text_payload}')
+
+        if broadcast_flag and parrot_flag and not from_parrot:
+            time.sleep(REPLY_DELAY)
+            publish_message(broadcast_id, f'{parrot_emoji}')
+
 
 def decode_encrypted(message_packet):
     try:
@@ -170,6 +192,7 @@ def decode_encrypted(message_packet):
             process_message(message_packet, text_payload, is_encrypted)
 
     except Exception as e:
+        print(e)
         pass
 
 def send_node_info(destination_id):
