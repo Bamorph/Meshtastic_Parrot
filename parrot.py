@@ -162,7 +162,7 @@ def process_message(mp, text_payload, is_encrypted):
 
         if broadcast_flag and parrot_flag and not from_parrot:
             time.sleep(REPLY_DELAY)
-            publish_message(broadcast_id, f'{parrot_emoji}')
+            publish_message(broadcast_id, f'{parrot_emoji} num-num')
 
 
 def decode_encrypted(message_packet):
