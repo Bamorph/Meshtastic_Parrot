@@ -8,3 +8,4 @@ TODO:
 - Send Parrot Node info each x Minutes to show that parrot is alive 
 - add location to node info
 - try to enable trace route
+- requirements.txt
