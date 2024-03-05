@@ -34,8 +34,6 @@ key = replaced_key
 
 broadcast_id = 4294967295
 
-# Convert hex to int and remove '!'
-node_number = 2882396642  # int('abcd', 16)
 
 def create_node_id(node_number):
     return f"!{hex(node_number)[2:]}"
@@ -44,7 +42,12 @@ def decode_node_id(node_id):
     hex_string = node_id[1:]  # Removing the '!' character
     return int(hex_string, 16)
 
-node_id = create_node_id(node_number)
+
+node_id = "!abcde1e2"
+node_number = decode_node_id(node_id)
+
+
+# node_id = create_node_id(node_number)
 node_name = node_id
 
 print(f'AUTO-ROUTER NODE-ID: {node_id}')
