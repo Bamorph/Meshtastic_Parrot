@@ -9,5 +9,9 @@
     "long_name_entry": "MQTT-PARROT",
     "client_hw_model": "PRIVATE_HW",
     "REPLY_DELAY": 1,
-    "NODE_INFO_PERIOD": 900
+    "NODE_INFO_PERIOD": 30,
+    "SEND_POSITION": false,
+    "lat": "",
+    "lon": "",
+    "alt": ""
 }
