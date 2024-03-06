@@ -9,6 +9,8 @@ import random
 import time
 import threading
 import json
+import signal
+import sys
 
 # Load settings from JSON file
 with open('settings.json', 'r') as f:
@@ -26,7 +28,6 @@ long_name_entry = settings.get('long_name_entry', 'MQTT-PARROT')
 client_hw_model = settings.get('client_hw_model', 'PRIVATE_HW')
 REPLY_DELAY = settings.get('REPLY_DELAY', 1)
 NODE_INFO_PERIOD = settings.get('NODE_INFO_PERIOD', 900)
-
 
 short_name_entry = "\U0001F99C" # 🦜 emoji
 
@@ -258,6 +259,18 @@ def on_message(client, userdata, msg):
     
     if message_packet.HasField("encrypted") and not message_packet.HasField("decoded"):
         decode_encrypted(message_packet)
+
+
+# Define a signal handler function to handle termination signals
+def signal_handler(sig, frame):
+    print("Exiting...")
+    client.disconnect()  # Disconnect from the MQTT broker
+    client.loop_stop()   # Stop the MQTT client loop
+    sys.exit(0)
+
+# Register the signal handler for SIGINT and SIGTERM signals
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 if __name__ == '__main__':
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
