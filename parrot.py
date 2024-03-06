@@ -7,6 +7,8 @@ from cryptography.hazmat.backends import default_backend
 import base64
 import random
 import time
+import threading
+
 
 # Default settings
 MQTT_BROKER = "mqtt.meshtastic.org"
@@ -23,6 +25,7 @@ short_name_entry = "\U0001F99C" # 🦜 emoji
 client_hw_model = "PRIVATE_HW"
 
 REPLY_DELAY = 1 # seconds
+NODE_INFO_PERIOD = 15 * 60
 
 padded_key = key.ljust(len(key) + ((4 - (len(key) % 4)) % 4), '=')
 replaced_key = padded_key.replace('-', '+').replace('_', '/')
@@ -216,6 +219,11 @@ def send_node_info(destination_id):
 
         generate_mesh_packet(destination_id, encoded_message)
 
+def send_node_info_periodically():
+    while True:
+        send_node_info(broadcast_id)
+        print("Sending Node Info")
+        time.sleep(NODE_INFO_PERIOD)
 
 def on_connect(client, userdata, flags, rc, properties):
     if rc == 0:
@@ -248,6 +256,11 @@ if __name__ == '__main__':
 
     subscribe_topic = f"{root_topic}{channel}/#"
     client.subscribe(subscribe_topic, 0)
+
+    # Create a separate thread for sending node info periodically
+    node_info_thread = threading.Thread(target=send_node_info_periodically)
+    node_info_thread.daemon = True
+    node_info_thread.start()
 
     while client.loop() == 0:
         pass
