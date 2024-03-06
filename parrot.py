@@ -31,6 +31,13 @@ NODE_INFO_PERIOD = settings.get('NODE_INFO_PERIOD', 900)
 
 short_name_entry = "\U0001F99C" # 🦜 emoji
 
+# New position settings
+SEND_POSITION = settings.get('SEND_POSITION', False)
+lat = settings.get('lat', '')
+lon = settings.get('lon', '')
+alt = settings.get('alt', '')
+
+
 padded_key = key.ljust(len(key) + ((4 - (len(key) % 4)) % 4), '=')
 replaced_key = padded_key.replace('-', '+').replace('_', '/')
 key = replaced_key
@@ -144,7 +151,7 @@ def process_message(mp, text_payload, is_encrypted):
     mp_to = getattr(mp, "to")
     mp_from = getattr(mp, "from")
     mp_timestamp = getattr(mp, "rx_time")
-    print(mp_timestamp) # time format: 1709684120
+    # print(mp_timestamp) # time format: 1709684120
 
     parrot_flag = False
     broadcast_flag = False
@@ -207,6 +214,7 @@ def decode_encrypted(message_packet):
         pass
 
 def send_node_info(destination_id):
+    print("Sending Node Info")
     global client_short_name, client_long_name, node_name, node_number, client_hw_model, broadcast_id
 
     if not client.is_connected():
@@ -234,15 +242,52 @@ def send_node_info(destination_id):
 
         generate_mesh_packet(destination_id, encoded_message)
 
+
+def send_node_position(destination_id):
+    print("Sending Position Info")
+    global node_number, broadcast_id
+
+    if not client.is_connected():
+        message =  current_time() + " >>> Connect to a broker before sending position"
+    else:
+        node_number = int(node_number)
+        pos_time = int(time.time())
+
+        latitude = float(lat)  # Convert latitude to a float
+        longitude = float(lon)  # Convert longitude to a float
+
+        latitude = latitude * 1e7
+        longitude = longitude * 1e7
+
+        latitude_i = int(latitude)
+        longitude_i = int(longitude)
+
+        position_payload = mesh_pb2.Position()
+        setattr(position_payload, "latitude_i", latitude_i)
+        setattr(position_payload, "longitude_i", longitude_i)
+        setattr(position_payload, "altitude", 420)
+        setattr(position_payload, "time", pos_time)
+
+        position_payload = position_payload.SerializeToString()
+
+        encoded_message = mesh_pb2.Data()
+        encoded_message.portnum = portnums_pb2.POSITION_APP
+        encoded_message.payload = position_payload
+        encoded_message.want_response = False
+
+        generate_mesh_packet(destination_id, encoded_message)
+
+
 def send_node_info_periodically():
     while True:
         send_node_info(broadcast_id)
-        print("Sending Node Info")
+        if SEND_POSITION:
+            send_node_position(broadcast_id)
         time.sleep(NODE_INFO_PERIOD)
 
 def on_connect(client, userdata, flags, rc, properties):
     if rc == 0:
-        print(f"Connected to {MQTT_BROKER} on topic {root_topic}{channel}")
+        print(f"Connected to {MQTT_BROKER} on topic {channel}")
         send_node_info(broadcast_id)
     else:
         print(f"Failed to connect to MQTT broker with result code {str(rc)}")
@@ -266,6 +311,7 @@ def signal_handler(sig, frame):
     print("Exiting...")
     client.disconnect()  # Disconnect from the MQTT broker
     client.loop_stop()   # Stop the MQTT client loop
+    node_info_thread.stop()
     sys.exit(0)
 
 # Register the signal handler for SIGINT and SIGTERM signals
