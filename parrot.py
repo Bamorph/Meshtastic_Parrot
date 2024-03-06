@@ -8,24 +8,27 @@ import base64
 import random
 import time
 import threading
+import json
+
+# Load settings from JSON file
+with open('settings.json', 'r') as f:
+    settings = json.load(f)
+
+# Update variables with settings
+MQTT_BROKER = settings.get('MQTT_BROKER', 'mqtt.meshtastic.org')
+MQTT_PORT = settings.get('MQTT_PORT', 1883)
+MQTT_USERNAME = settings.get('MQTT_USERNAME', 'meshdev')
+MQTT_PASSWORD = settings.get('MQTT_PASSWORD', 'large4cats')
+root_topic = settings.get('root_topic', 'msh/ANZ/2/c/')
+channel = settings.get('channel', 'LongFast')
+key = settings.get('key', '1PG7OiApB1nwvP+rz05pAQ==')
+long_name_entry = settings.get('long_name_entry', 'MQTT-PARROT')
+client_hw_model = settings.get('client_hw_model', 'PRIVATE_HW')
+REPLY_DELAY = settings.get('REPLY_DELAY', 1)
+NODE_INFO_PERIOD = settings.get('NODE_INFO_PERIOD', 900)
 
 
-# Default settings
-MQTT_BROKER = "mqtt.meshtastic.org"
-MQTT_PORT = 1883
-MQTT_USERNAME = "meshdev"
-MQTT_PASSWORD = "large4cats"
-root_topic = "msh/ANZ/2/c/"
-channel = "LongFast"
-key = "1PG7OiApB1nwvP+rz05pAQ=="
-
-long_name_entry = "MQTT-PARROT"
-# short_name_entry = "🦜"
 short_name_entry = "\U0001F99C" # 🦜 emoji
-client_hw_model = "PRIVATE_HW"
-
-REPLY_DELAY = 1 # seconds
-NODE_INFO_PERIOD = 15 * 60
 
 padded_key = key.ljust(len(key) + ((4 - (len(key) % 4)) % 4), '=')
 replaced_key = padded_key.replace('-', '+').replace('_', '/')
@@ -164,8 +167,7 @@ def process_message(mp, text_payload, is_encrypted):
 
         if create_node_id(getattr(mp, "to")) == node_id:
             direct_flag = True
-        
-        # Added debounce code to try to prevent double reply
+
         if direct_flag:
             if time.time() - last_reply_timestamp > REPLY_DELAY:
                 time.sleep(REPLY_DELAY)
