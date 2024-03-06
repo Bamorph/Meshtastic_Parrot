@@ -130,10 +130,17 @@ known_id_list = []
 
 parrot_emoji = "\U0001F99C"
 
+last_reply_timestamp = 0
+
+
 def process_message(mp, text_payload, is_encrypted):
+    global last_reply_timestamp
+
     mp_id = getattr(mp, "id")
     mp_to = getattr(mp, "to")
     mp_from = getattr(mp, "from")
+    mp_timestamp = getattr(mp, "rx_time")
+    print(mp_timestamp) # time format: 1709684120
 
     parrot_flag = False
     broadcast_flag = False
@@ -157,14 +164,19 @@ def process_message(mp, text_payload, is_encrypted):
 
         if create_node_id(getattr(mp, "to")) == node_id:
             direct_flag = True
-
+        
+        # Added debounce code to try to prevent double reply
         if direct_flag:
-            time.sleep(REPLY_DELAY)
-            publish_message(mp_from, f'PARROT:{text_payload}')
+            if time.time() - last_reply_timestamp > REPLY_DELAY:
+                time.sleep(REPLY_DELAY)
+                publish_message(mp_from, f'PARROT:{text_payload}')
+                last_reply_timestamp = time.time()
 
         if broadcast_flag and parrot_flag and not from_parrot:
-            time.sleep(REPLY_DELAY)
-            publish_message(broadcast_id, f'{parrot_emoji} num-num')
+            if time.time() - last_reply_timestamp > REPLY_DELAY:
+                time.sleep(REPLY_DELAY)
+                publish_message(broadcast_id, f'{parrot_emoji} num-num')
+                last_reply_timestamp = time.time()
 
 
 def decode_encrypted(message_packet):
