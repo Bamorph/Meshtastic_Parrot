@@ -146,7 +146,7 @@ last_reply_timestamp = 0
 
 def process_message(mp, text_payload, is_encrypted):
     global last_reply_timestamp
-
+    print(mp)
     mp_id = getattr(mp, "id")
     mp_to = getattr(mp, "to")
     mp_from = getattr(mp, "from")
@@ -164,7 +164,7 @@ def process_message(mp, text_payload, is_encrypted):
 
     if mp_id not in known_id_list:
         known_id_list.append(mp_id)
-        print(mp)
+        # print(mp)
 
         if text_payload.startswith("\U0001F99C"):
             print("Parrot emoji detected! \U0001F99C")
