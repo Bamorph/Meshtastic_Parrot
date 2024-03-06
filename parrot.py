@@ -242,7 +242,7 @@ def send_node_info_periodically():
 
 def on_connect(client, userdata, flags, rc, properties):
     if rc == 0:
-        print(f"Connected to {MQTT_BROKER} on topic {channel}")
+        print(f"Connected to {MQTT_BROKER} on topic {root_topic}{channel}")
         send_node_info(broadcast_id)
     else:
         print(f"Failed to connect to MQTT broker with result code {str(rc)}")
