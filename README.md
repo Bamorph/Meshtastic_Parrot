@@ -1,6 +1,6 @@
 # Meshtastic_Parrot 🦜
 
-![Meshtastic_Parrot]([https://github.com/Bamorph/Meshtastic_Parrot/))
+![Meshtastic_Parrot]([https://github.com/Bamorph/Meshtastic_Parrot/)
 
 Developed with Meshtastic user and amateur radio operator Burger, DL9BU
 
