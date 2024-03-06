@@ -14,3 +14,4 @@ TODO:
 - add location to node info
 - try to enable trace route
 - requirements.txt
+- ~split settings into a config file~
