@@ -3,6 +3,8 @@
 Developed with Meshtastic user and amateur radio operator Burger, DL9BU
 
 Many thanks to and inspiration from pdxlocs: https://github.com/pdxlocations/Meshtastic-MQTT-Connect
+Thanks to:
+Meshtastic user FrancisUK1989 for beta testing.
 
 ```
 pip3 install meshtastic paho-mqtt cryptography
