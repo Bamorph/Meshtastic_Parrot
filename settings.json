@@ -8,6 +8,7 @@
     "key": "1PG7OiApB1nwvP+rz05pAQ==",
     "long_name_entry": "MQTT-PARROT",
     "client_hw_model": "PRIVATE_HW",
+    "COMMAND_NODE": "!ffffffff",
     "REPLY_DELAY": 1,
     "NODE_INFO_PERIOD": 900,
     "SEND_POSITION": false,
