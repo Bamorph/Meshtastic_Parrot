@@ -170,7 +170,8 @@ def process_message(mp, text_payload, is_encrypted):
     if mp_id not in known_id_list:
         known_id_list.append(mp_id)
         print(mp)
-        print(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}", file=open('message_log.txt', 'a'))
+        if create_node_id(mp_to) == "!ffffffff" or create_node_id(mp_to) == node_id:
+            print(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}", file=open('message_log.txt', 'a'))
 
         if text_payload.startswith("\U0001F99C"):
             print("Parrot emoji detected! \U0001F99C")
