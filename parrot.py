@@ -28,6 +28,7 @@ long_name_entry = settings.get('long_name_entry', 'MQTT-PARROT')
 client_hw_model = settings.get('client_hw_model', 'PRIVATE_HW')
 REPLY_DELAY = settings.get('REPLY_DELAY', 1)
 NODE_INFO_PERIOD = settings.get('NODE_INFO_PERIOD', 900)
+COMMAND_NODE = settings.get('COMMAND_NODE')
 
 short_name_entry = "\U0001F99C" # 🦜 emoji
 
@@ -53,12 +54,14 @@ def decode_node_id(node_id):
 
 node_id = "!abcde1e2"
 node_number = decode_node_id(node_id)
+command_node_number = decode_node_id(COMMAND_NODE)
 
-
-node_id = create_node_id(node_number)
+# node_id = create_node_id(node_number)
 node_name = node_id
 
 print(f'AUTO-ROUTER NODE-ID: {node_id}')
+print(f'COMMAND NODE-ID: {COMMAND_NODE}')
+
 
 def set_topic():
     global subscribe_topic, publish_topic, node_number, node_name
@@ -146,7 +149,7 @@ last_reply_timestamp = 0
 
 def process_message(mp, text_payload, is_encrypted):
     global last_reply_timestamp
-    print(mp)
+    # print(mp)
     mp_id = getattr(mp, "id")
     mp_to = getattr(mp, "to")
     mp_from = getattr(mp, "from")
@@ -157,6 +160,8 @@ def process_message(mp, text_payload, is_encrypted):
     broadcast_flag = False
     direct_flag = False
     from_parrot = False
+    command_flag = False
+    command_node_flag = False
 
     if mp_from == node_number:
         print("Parrot message detected")
@@ -164,11 +169,21 @@ def process_message(mp, text_payload, is_encrypted):
 
     if mp_id not in known_id_list:
         known_id_list.append(mp_id)
-        # print(mp)
+        print(mp)
+        print(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}", file=open('message_log.txt', 'a'))
 
         if text_payload.startswith("\U0001F99C"):
             print("Parrot emoji detected! \U0001F99C")
             parrot_flag = True
+
+        if text_payload.startswith("!"):
+            print("Command detected!")
+            command_flag = True
+            # print(text_payload)
+            if mp_from == command_node_number:
+                print("Command node detected!")
+                command_node_flag = True
+
         if mp_to == broadcast_id:
             print("broadcast message detected")
             broadcast_flag = True
@@ -176,7 +191,7 @@ def process_message(mp, text_payload, is_encrypted):
         if create_node_id(getattr(mp, "to")) == node_id:
             direct_flag = True
 
-        if direct_flag:
+        if direct_flag and not command_flag:
             if time.time() - last_reply_timestamp > REPLY_DELAY:
                 time.sleep(REPLY_DELAY)
                 publish_message(mp_from, f'PARROT:{text_payload}')
@@ -187,7 +202,18 @@ def process_message(mp, text_payload, is_encrypted):
                 time.sleep(REPLY_DELAY)
                 publish_message(broadcast_id, f'{parrot_emoji} num-num')
                 last_reply_timestamp = time.time()
+        
 
+        if direct_flag and command_flag:
+            if command_flag and not command_node_flag:
+                publish_message(mp_from, f'PARROT:You are not a command node!')
+
+            elif command_node_flag and text_payload == "!shutdown":
+                publish_message(mp_from, f'PARROT:Shutting Down Parrot!')
+                close_connection()
+
+            elif command_node_flag and text_payload == "!status":
+                publish_message(mp_from, f'PARROT:status message here')
 
 def decode_encrypted(message_packet):
     try:
@@ -306,13 +332,16 @@ def on_message(client, userdata, msg):
         decode_encrypted(message_packet)
 
 
-# Define a signal handler function to handle termination signals
-def signal_handler(sig, frame):
+def close_connection():
     print("Exiting...")
     client.disconnect()  # Disconnect from the MQTT broker
     client.loop_stop()   # Stop the MQTT client loop
     node_info_thread.stop()
     sys.exit(0)
+
+# Define a signal handler function to handle termination signals
+def signal_handler(sig, frame):
+    close_connection()
 
 # Register the signal handler for SIGINT and SIGTERM signals
 signal.signal(signal.SIGINT, signal_handler)
