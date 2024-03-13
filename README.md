@@ -8,7 +8,7 @@ Thanks to:
 - Meshtastic user FrancisUK1989 for beta testing.
 
 ```
-pip3 install meshtastic paho-mqtt cryptography
+pip3 install meshtastic paho-mqtt cryptography protobuf
 ```
 
 
