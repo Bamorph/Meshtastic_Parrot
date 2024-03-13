@@ -145,7 +145,6 @@ parrot_emoji = "\U0001F99C"
 
 last_reply_timestamp = 0
 
-
 def process_message(mp, text_payload, is_encrypted):
     global last_reply_timestamp
     # print(mp)
@@ -170,10 +169,13 @@ def process_message(mp, text_payload, is_encrypted):
         known_id_list.append(mp_id)
         print(mp)
 
-        if create_node_id(mp_to) == "!ffffffff" or create_node_id(mp_to) == node_id:
-            print(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}", file=open('message_log.txt', 'a'))
+        # if create_node_id(mp_to) == "!ffffffff" or create_node_id(mp_to) == node_id:
+        #     with open('message_log.txt', 'a', encoding='utf-8') as file:
+        #         file.write(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}\n")
 
-        # print(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}", file=open('message_log.txt', 'a'))
+        with open('message_log.txt', 'a', encoding='utf-8') as file:
+            file.write(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}\n")
+        
 
         if text_payload.startswith("\U0001F99C"):
             print("Parrot emoji detected! \U0001F99C")
@@ -207,8 +209,10 @@ def process_message(mp, text_payload, is_encrypted):
                 last_reply_timestamp = time.time()
 
         if direct_flag and command_flag:
+            # sendTraceRoute(mp_from, 3)
             if command_flag and not command_node_flag:
                 publish_message(mp_from, f'PARROT:You are not a command node!')
+                
 
             elif command_node_flag and text_payload == "!shutdown":
                 publish_message(mp_from, f'PARROT:Shutting Down Parrot!')
@@ -306,16 +310,16 @@ def send_node_position(destination_id):
 
         generate_mesh_packet(destination_id, encoded_message)
 
-
 def sendTraceRoute(destination_id, hopLimit):
     print("Sending Trace Route!")
-    
     route_discovery = mesh_pb2.RouteDiscovery()
+
     encoded_message = mesh_pb2.Data()
     encoded_message.portnum = portnums_pb2.TRACEROUTE_APP
-    encoded_message.want_response = True
 
+    encoded_message.want_response = True
     generate_mesh_packet(destination_id, encoded_message)
+
 
 def send_node_info_periodically():
     while True:
@@ -363,6 +367,7 @@ def on_message(client, userdata, msg):
                 routeStr += " --> " + create_node_id(nodeNum)
         routeStr += " --> " + create_node_id(getattr(message_packet, "from"))
         print(routeStr)
+        print(message_packet,file=open('route_log.txt', 'a'))
         print(routeStr, file=open('route_log.txt', 'a'))
         
 def close_connection():
