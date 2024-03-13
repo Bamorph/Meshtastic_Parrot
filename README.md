@@ -15,6 +15,6 @@ pip3 install meshtastic paho-mqtt cryptography
 TODO:
 - ~Send Parrot Node info each x Minutes to show that parrot is alive~
 - ~add location to node info (True or False in settings.json)~
-- try to enable trace route
+- ~try to enable trace route~
 - requirements.txt
 - ~split settings into a config file~
