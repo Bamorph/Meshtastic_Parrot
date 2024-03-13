@@ -11,6 +11,9 @@ import threading
 import json
 import signal
 import sys
+import google.protobuf
+from google.protobuf import json_format
+
 
 # Load settings from JSON file
 with open('settings.json', 'r') as f:
@@ -89,10 +92,6 @@ def generate_hash(name, key):
     result = h_name ^ h_key
     return result
 
-def direct_message(destination_id):
-    destination_id = int(destination_id[1:], 16)
-    publish_message(destination_id)
-
 def publish_message(destination_id, message):
     global key
     message_text = message
@@ -170,8 +169,11 @@ def process_message(mp, text_payload, is_encrypted):
     if mp_id not in known_id_list:
         known_id_list.append(mp_id)
         print(mp)
+
         if create_node_id(mp_to) == "!ffffffff" or create_node_id(mp_to) == node_id:
             print(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}", file=open('message_log.txt', 'a'))
+
+        # print(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}", file=open('message_log.txt', 'a'))
 
         if text_payload.startswith("\U0001F99C"):
             print("Parrot emoji detected! \U0001F99C")
@@ -203,7 +205,6 @@ def process_message(mp, text_payload, is_encrypted):
                 time.sleep(REPLY_DELAY)
                 publish_message(broadcast_id, f'{parrot_emoji} num-num')
                 last_reply_timestamp = time.time()
-        
 
         if direct_flag and command_flag:
             if command_flag and not command_node_flag:
@@ -238,6 +239,7 @@ def decode_encrypted(message_packet):
 
     except Exception as e:
         print(e)
+        print(message_packet)
         pass
 
 def send_node_info(destination_id):
@@ -327,12 +329,32 @@ def on_message(client, userdata, msg):
         message_packet = service_envelope.packet
     except Exception as e:
         print(f"Error parsing message: {str(e)}")
+        print(msg)
         return
     
     if message_packet.HasField("encrypted") and not message_packet.HasField("decoded"):
         decode_encrypted(message_packet)
 
+    if message_packet.decoded.portnum == portnums_pb2.NODEINFO_APP:
+        info = mesh_pb2.User()
+        info.ParseFromString(message_packet.decoded.payload)
+        # print(info)
 
+    if message_packet.decoded.portnum == portnums_pb2.TRACEROUTE_APP:
+        routeDiscovery = mesh_pb2.RouteDiscovery()
+        routeDiscovery.ParseFromString(message_packet.decoded.payload)
+        asDict = google.protobuf.json_format.MessageToDict(routeDiscovery)
+        
+        print("Route traced:")
+        routeStr = create_node_id(getattr(message_packet, "to"))
+       
+        if "route" in asDict:
+            for nodeNum in asDict["route"]:
+                routeStr += " --> " + create_node_id(nodeNum)
+        routeStr += " --> " + create_node_id(getattr(message_packet, "from"))
+        print(routeStr)
+        print(routeStr, file=open('route_log.txt', 'a'))
+        
 def close_connection():
     print("Exiting...")
     client.disconnect()  # Disconnect from the MQTT broker
