@@ -307,6 +307,16 @@ def send_node_position(destination_id):
         generate_mesh_packet(destination_id, encoded_message)
 
 
+def sendTraceRoute(destination_id, hopLimit):
+    print("Sending Trace Route!")
+    
+    route_discovery = mesh_pb2.RouteDiscovery()
+    encoded_message = mesh_pb2.Data()
+    encoded_message.portnum = portnums_pb2.TRACEROUTE_APP
+    encoded_message.want_response = True
+
+    generate_mesh_packet(destination_id, encoded_message)
+
 def send_node_info_periodically():
     while True:
         send_node_info(broadcast_id)
