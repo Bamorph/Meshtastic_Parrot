@@ -380,14 +380,16 @@ def on_message(client, userdata, msg):
         
         print("Route traced:")
         routeStr = create_node_id(getattr(message_packet, "to"))
-       
-        if "route" in asDict:
-            for nodeNum in asDict["route"]:
-                routeStr += " --> " + create_node_id(nodeNum)
-        routeStr += " --> " + create_node_id(getattr(message_packet, "from"))
-        print(routeStr)
-        print(message_packet,file=open('route_log.txt', 'a'))
-        print(routeStr, file=open('route_log.txt', 'a'))
+
+        if message_packet.decoded.payload:
+            if "route" in asDict:
+                for nodeNum in asDict["route"]:
+                    routeStr += " --> " + create_node_id(nodeNum)
+            routeStr += " --> " + create_node_id(getattr(message_packet, "from"))
+
+            print(routeStr)
+            print(message_packet,file=open('route_log.txt', 'a'))
+            print(routeStr, file=open('route_log.txt', 'a'))
         
 def close_connection():
     print("Exiting...")
