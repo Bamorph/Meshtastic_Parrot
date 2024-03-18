@@ -152,7 +152,7 @@ def process_message(mp, text_payload, is_encrypted):
     mp_to = getattr(mp, "to")
     mp_from = getattr(mp, "from")
     mp_timestamp = getattr(mp, "rx_time")
-    # print(mp_timestamp) # time format: 1709684120
+    mp_ack = getattr(mp, "want_ack")
 
     parrot_flag = False
     broadcast_flag = False
@@ -160,15 +160,20 @@ def process_message(mp, text_payload, is_encrypted):
     from_parrot = False
     command_flag = False
     command_node_flag = False
-
+    send_ack_flag = False
+    
     if mp_from == node_number:
         print("Parrot message detected")
         from_parrot = True
-
+        
+    if mp_ack:
+        send_ack_flag = True
+    
     if mp_id not in known_id_list:
         known_id_list.append(mp_id)
         print(mp)
 
+        
         # if create_node_id(mp_to) == "!ffffffff" or create_node_id(mp_to) == node_id:
         #     with open('message_log.txt', 'a', encoding='utf-8') as file:
         #         file.write(f"{create_node_id(mp_from)} - {create_node_id(mp_to)}: {text_payload}\n")
@@ -192,7 +197,11 @@ def process_message(mp, text_payload, is_encrypted):
         if mp_to == broadcast_id:
             print("broadcast message detected")
             broadcast_flag = True
-
+            
+        if send_ack_flag and direct_flag and not parrot_flag:
+            print("ACK wanted")
+            send_ack(mp_from, mp_id)
+            
         if create_node_id(getattr(mp, "to")) == node_id:
             direct_flag = True
 
@@ -309,6 +318,16 @@ def send_node_position(destination_id):
         encoded_message.want_response = False
 
         generate_mesh_packet(destination_id, encoded_message)
+
+def send_ack(destination_id, message_id):
+    print("Sending ACK")
+
+    encoded_message = mesh_pb2.Data()
+    encoded_message.portnum = portnums_pb2.ROUTING_APP
+    encoded_message.request_id = message_id
+    encoded_message.payload = b"\030\000"
+
+    generate_mesh_packet(destination_id, encoded_message)
 
 def sendTraceRoute(destination_id, hopLimit):
     print("Sending Trace Route!")
